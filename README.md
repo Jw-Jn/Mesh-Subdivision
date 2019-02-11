@@ -1,14 +1,1 @@
-The obj viewer load chess_piece.obj for default.
-
-Click Open to choose the obj file.
-
-Click Save to save current mesh to obj file.
-
-Drag the rotation/translation/zooming sliders to rotate/translate/zoom the mesh.
-
-Choose different shading methods in the render options box.
-
-For subdivision, choose subdivision methods from the combo box;
-click Start Subdivision to start the one level subdivision processing.
-
-Click Quit to exit from the GUI.
+# Mesh subdivisionThis is a mesh subdivision program developed with C++ and OpenGL. The core of the program is a winged-edge data structure and two mesh subdivision algorithms, i.e., Butterfly subdivision and Loop subdivision. The GUI is based on [NanoGUI](https://github.com/wjakob/nanogui). ## How to use the software* Click "Open" to select and open an obj file.* Use the rotation/translation/zooming sliders to control the view.* Select a subdivision algorithm and click on "Start Subdivision".![image](https://raw.githubusercontent.com/Jw-Jn/Mesh-Subdivision/master/demo.gif)
