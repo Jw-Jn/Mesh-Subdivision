@@ -18,5 +18,5 @@ SET(TARGET_SRC WingEdge.cpp)
 
 embed_resources(MyResources shader/vert.glsl shader/frag.glsl)
 
-add_executable(obj_view obj_view.cpp ${MyResources} ${TARGET_H} ${TARGET_SRC})
-target_link_libraries(obj_view nanogui ${NANOGUI_EXTRA_LIBS})
+add_executable(MeshSubdivision obj_view.cpp ${MyResources} ${TARGET_H} ${TARGET_SRC})
+target_link_libraries(MeshSubdivision nanogui ${NANOGUI_EXTRA_LIBS})

@@ -250,7 +250,7 @@ bool operator==(const int2 a, const int2 b) {
 	return (a.x == b.x) && (a.y == b.y);
 }
 
-bool WingEdge::subdivision(std::string method, int level)
+bool WingEdge::subdivision(std::string method)
 {
 	// new face list
 	std::vector<std::vector<int>> newFaces;
@@ -258,199 +258,193 @@ bool WingEdge::subdivision(std::string method, int level)
 	std::cout << method << std::endl;
 	if (method.compare("Butterfly")==0)
 	{
-		while (level--)
+		newFaces.clear();
+		int faceNum = faceList.size();
+		std::map<int2, int> cutMap;
+
+		std::vector<int> evenVertices;
+		std::vector<int> oddVertices;
+
+		// for all faces
+		for (int i = 0; i < faceNum; i++)
 		{
-			newFaces.clear();
-			int faceNum = faceList.size();
-			std::map<int2, int> cutMap;
+			evenVertices.clear();
+			oddVertices.clear();
 
-			std::vector<int> evenVertices;
-			std::vector<int> oddVertices;
+			Wedge *e0 = faceList[i]->oneEdge;
+			Wedge *edge = e0;
 
-			// for all faces
-			for (int i = 0; i < faceNum; i++)
+			// while !=e0
+			do
 			{
-				evenVertices.clear();
-				oddVertices.clear();
+				// edge->end()->idx, save to even
+				int startIdx = edge->v_start->idx;
+				int endIdx = edge->v_end->idx;
 
-				Wedge *e0 = faceList[i]->oneEdge;
-				Wedge *edge = e0;
+				evenVertices.push_back(endIdx);
 
-				// while !=e0
-				do
-				{
-					// edge->end()->idx, save to even
-					int startIdx = edge->v_start->idx;
-					int endIdx = edge->v_end->idx;
+				// check edge devided?
+				int2 edgeIdx = int2(startIdx, endIdx);
+				if (startIdx > endIdx)
+					edgeIdx = int2(endIdx, startIdx);
 
-					evenVertices.push_back(endIdx);
+				int vertexIdx;
 
-					// check edge devided?
-					int2 edgeIdx = int2(startIdx, endIdx);
-					if (startIdx > endIdx)
-						edgeIdx = int2(endIdx, startIdx);
+				std::pair<std::map<int2, int >::iterator, bool> res = cutMap.insert(std::pair<int2, int>(edgeIdx, -1));
+				// not devided
+				if (res.second) {
+					// compute vertex
+					Wvertex *v = new Wvertex();
+					v->position = computeButterfly(edge);
 
-					int vertexIdx;
+					// insert to vertexlist
+					vertexList.push_back(v);
 
-					std::pair<std::map<int2, int >::iterator, bool> res = cutMap.insert(std::pair<int2, int>(edgeIdx, -1));
-					// not devided
-					if (res.second) {
-						// compute vertex
-						Wvertex *v = new Wvertex();
-						v->position = computeButterfly(edge);
+					// save idx to map
+					cutMap[edgeIdx] = vertexList.size() - 1;
 
-						// insert to vertexlist
-						vertexList.push_back(v);
+					vertexIdx = vertexList.size() - 1;
 
-						// save idx to map
-						cutMap[edgeIdx] = vertexList.size() - 1;
-
-						vertexIdx = vertexList.size() - 1;
-
-					}
-					// devided
-					else {
-						// get idx
-						vertexIdx = res.first->second;
-					}
-
-					//save to odd
-					oddVertices.push_back(vertexIdx);
-
-					edge = edge->e_right_nex;
-
-				} while (edge != e0);
-
-				// odd[0,1,2]; odd[0,1]even[0]; odd[1,2]even[1]; odd[2,0]even[2];
-				// face list insert vertexidx -> face
-				int num = oddVertices.size();
-				std::vector<int> face;
-
-				for (int j = 0; j < num; j++)
-				{
-					face.clear();
-					face.push_back(oddVertices[j]);
-					face.push_back(oddVertices[(j + 1) % num]);
-					face.push_back(evenVertices[j]);
-					newFaces.push_back(face);
+				}
+				// devided
+				else {
+					// get idx
+					vertexIdx = res.first->second;
 				}
 
-				face.clear();
-				for (int j = 0; j < num; j++)
-					face.push_back(oddVertices[num - 1 - j]);
-				newFaces.push_back(face);
+				//save to odd
+				oddVertices.push_back(vertexIdx);
 
+				edge = edge->e_right_nex;
+
+			} while (edge != e0);
+
+			// odd[0,1,2]; odd[0,1]even[0]; odd[1,2]even[1]; odd[2,0]even[2];
+			// face list insert vertexidx -> face
+			int num = oddVertices.size();
+			std::vector<int> face;
+
+			for (int j = 0; j < num; j++)
+			{
+				face.clear();
+				face.push_back(oddVertices[j]);
+				face.push_back(oddVertices[(j + 1) % num]);
+				face.push_back(evenVertices[j]);
+				newFaces.push_back(face);
 			}
 
-			bool result = reconstructMesh(newFaces);
-			return result;
+			face.clear();
+			for (int j = 0; j < num; j++)
+				face.push_back(oddVertices[num - 1 - j]);
+			newFaces.push_back(face);
+
 		}
+
+		bool result = reconstructMesh(newFaces);
+		return result;
 	}
 
 	else
 	{
 		std::cout << "loop" << std::endl;
 
-		while (level--)
+		std::vector<Wvertex *> vertexList_newPosition;
+
+		for (int i = 0; i < vertexList.size(); i++)
 		{
-			std::vector<Wvertex *> vertexList_newPosition;
+			Wvertex *v = new Wvertex;
+			vertexList_newPosition.push_back(v);
+		}
 
-			for (int i = 0; i < vertexList.size(); i++)
+		newFaces.clear();
+		int faceNum = faceList.size();
+		std::map<int2, int> cutMap;
+
+		std::vector<int> evenVertices;
+		std::vector<int> oddVertices;
+
+		// for all faces
+		for (int i = 0; i < faceNum; i++)
+		{
+			evenVertices.clear();
+			oddVertices.clear();
+
+			Wedge *e0 = faceList[i]->oneEdge;
+			Wedge *edge = e0;
+
+			// while !=e0
+			do
 			{
-				Wvertex *v = new Wvertex;
-				vertexList_newPosition.push_back(v);
-			}
+				// edge->end()->idx, save to even
+				int startIdx = edge->v_start->idx;
+				int endIdx = edge->v_end->idx;
 
-			newFaces.clear();
-			int faceNum = faceList.size();
-			std::map<int2, int> cutMap;
+				evenVertices.push_back(endIdx);
+				vec3 newPosition = computeLoopVectex(edge);
+				// compute again
+				vertexList_newPosition[endIdx]->position = newPosition;
 
-			std::vector<int> evenVertices;
-			std::vector<int> oddVertices;
+				// check edge devided?
+				int2 edgeIdx = int2(startIdx, endIdx);
+				if (startIdx > endIdx)
+					edgeIdx = int2(endIdx, startIdx);
 
-			// for all faces
-			for (int i = 0; i < faceNum; i++)
-			{
-				evenVertices.clear();
-				oddVertices.clear();
+				int vertexIdx;
 
-				Wedge *e0 = faceList[i]->oneEdge;
-				Wedge *edge = e0;
+				std::pair<std::map<int2, int >::iterator, bool> res = cutMap.insert(std::pair<int2, int>(edgeIdx, -1));
+				// not devided
+				if (res.second) {
+					// compute vertex
+					Wvertex *v = new Wvertex();
+					v->position = computeLoopEdge(edge);
 
-				// while !=e0
-				do
-				{
-					// edge->end()->idx, save to even
-					int startIdx = edge->v_start->idx;
-					int endIdx = edge->v_end->idx;
+					// insert to vertexlist
+					vertexList.push_back(v);
 
-					evenVertices.push_back(endIdx);
-					vec3 newPosition = computeLoopVectex(edge);
-					// compute again
-					vertexList_newPosition[endIdx]->position = newPosition;
+					// save idx to map
+					cutMap[edgeIdx] = vertexList.size() - 1;
 
-					// check edge devided?
-					int2 edgeIdx = int2(startIdx, endIdx);
-					if (startIdx > endIdx)
-						edgeIdx = int2(endIdx, startIdx);
+					vertexIdx = vertexList.size() - 1;
 
-					int vertexIdx;
-
-					std::pair<std::map<int2, int >::iterator, bool> res = cutMap.insert(std::pair<int2, int>(edgeIdx, -1));
-					// not devided
-					if (res.second) {
-						// compute vertex
-						Wvertex *v = new Wvertex();
-						v->position = computeLoopEdge(edge);
-
-						// insert to vertexlist
-						vertexList.push_back(v);
-
-						// save idx to map
-						cutMap[edgeIdx] = vertexList.size() - 1;
-
-						vertexIdx = vertexList.size() - 1;
-
-					}
-					// devided
-					else {
-						// get idx
-						vertexIdx = res.first->second;
-					}
-
-					//save to odd
-					oddVertices.push_back(vertexIdx);
-
-					edge = edge->e_right_nex;
-
-				} while (edge != e0);
-
-				// odd[2,1,0]; odd[0,1]even[0]; odd[1,2]even[1]; odd[2,0]even[2];
-				// face list insert vertexidx -> face
-				int num = oddVertices.size();
-				std::vector<int> face;
-
-				for (int j = 0; j < num; j++)
-				{
-					face.clear();
-					face.push_back(oddVertices[j]);
-					face.push_back(oddVertices[(j + 1) % num]);
-					face.push_back(evenVertices[j]);
-					newFaces.push_back(face);
+				}
+				// devided
+				else {
+					// get idx
+					vertexIdx = res.first->second;
 				}
 
+				//save to odd
+				oddVertices.push_back(vertexIdx);
+
+				edge = edge->e_right_nex;
+
+			} while (edge != e0);
+
+			// odd[2,1,0]; odd[0,1]even[0]; odd[1,2]even[1]; odd[2,0]even[2];
+			// face list insert vertexidx -> face
+			int num = oddVertices.size();
+			std::vector<int> face;
+
+			for (int j = 0; j < num; j++)
+			{
 				face.clear();
-				for (int j = 0; j < num; j++)
-					face.push_back(oddVertices[num - 1 - j]);
+				face.push_back(oddVertices[j]);
+				face.push_back(oddVertices[(j + 1) % num]);
+				face.push_back(evenVertices[j]);
 				newFaces.push_back(face);
 			}
 
-			for (int i = 0; i < vertexList_newPosition.size(); i++)
-				vertexList[i]->position = vertexList_newPosition[i]->position;
-
-			bool result = reconstructMesh(newFaces);
-			return result;
+			face.clear();
+			for (int j = 0; j < num; j++)
+				face.push_back(oddVertices[num - 1 - j]);
+			newFaces.push_back(face);
 		}
+
+		for (int i = 0; i < vertexList_newPosition.size(); i++)
+			vertexList[i]->position = vertexList_newPosition[i]->position;
+
+		bool result = reconstructMesh(newFaces);
+		return result;
 	}
 	return false;
 }

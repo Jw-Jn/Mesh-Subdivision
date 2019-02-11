@@ -72,7 +72,7 @@ public:
 	vec3 getVertex(Wvertex * v) { return v->position; };
 	vec3 getNorm(Wvertex * v) { return v->norm; };
 	std::vector<std::vector<Wvertex *>> extractVerticesOfFaces();
-	bool subdivision(std::string method, int level);
+	bool subdivision(std::string method);
 
 	float maxdimlength;
 	vec3 center;
