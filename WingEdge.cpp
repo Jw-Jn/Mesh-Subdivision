@@ -568,7 +568,7 @@ vec3 WingEdge::computeButterfly(Wedge *e0)
 		{
 			vec3 p1 = computeButterflyPts(e0, leftD, true);
 			vec3 p2 = computeButterflyPts(e0, rightD, false);
-			position = (p1 + p2) / 2;
+			position = (p1 + p2) / 2.0;
 		}
 		return position;
 	}
@@ -577,6 +577,7 @@ vec3 WingEdge::computeButterfly(Wedge *e0)
 vec3 WingEdge::computeButterflyPts(Wedge *e0, int k, bool left)
 {
 	Wedge *edge = e0;
+	std::cout << k << std::endl;
 
 	std::vector<vec3> s(k);
 	vec3 position;
@@ -591,7 +592,7 @@ vec3 WingEdge::computeButterflyPts(Wedge *e0, int k, bool left)
 			s[1] = edge->v_end->position;
 			edge = edge->e_left_pre;
 			s[2] = edge->v_start->position;
-			position = s[2] * (-1.0 / 12.0) + (s[0] + s[1])*(5.0 / 12.0) + q * (1 - (-1.0 / 12) - (5.0 / 12.0) * 2);
+			position = (s[2] + s[1]) * (-1.0 / 12.0) + s[0]*(5.0 / 12.0) + q * (1 - (-1.0 / 12) * 2 - (5.0 / 12.0));
 		}
 		else if (k == 4)
 		{
@@ -635,7 +636,7 @@ vec3 WingEdge::computeButterflyPts(Wedge *e0, int k, bool left)
 			s[1] = edge->v_start->position;
 			edge = edge->e_left_nex;
 			s[2] = edge->v_end->position;
-			position = s[2] * (-1.0 / 12.0) + (s[0] + s[1])*(5.0 / 12.0) + q * (1 - (-1.0 / 12) - (5.0 / 12.0) * 2);
+			position = (s[2] + s[1]) * (-1.0 / 12.0) + s[0]*(5.0 / 12.0) + q * (1 - (-1.0 / 12) * 2 - (5.0 / 12.0));
 		}
 		else if (k == 4)
 		{
